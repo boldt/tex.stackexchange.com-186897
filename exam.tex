@@ -1,0 +1,39 @@
+\documentclass[12pt,oneside,a4paper,final]{scrartcl}
+
+\newcounter{task}
+\setcounter{task}{0}
+
+\newcommand{\points}[1]{
+	(#1~Points)
+}
+
+\newcommand{\task}[2]{
+	\refstepcounter{task}
+  	\begin{flushleft}
+		{\LARGE\bf Task \arabic{task}}
+	\end{flushleft}
+	{\Large \textbf{#1}}
+	\leavevmode\hfill ({#2}~Points)\\
+}
+
+\begin{document}
+
+	\task{Java}{3}
+
+	Hello World \points{2}
+
+	for-each \points{1}
+
+	\task{C++}{5}
+
+	Bla bla \points{2}
+
+	Blub blub \points{4}
+
+	\task{Latex}{4}
+
+	Foo foo \points{2}
+
+	bar bar \points{2}
+
+\end{document}
