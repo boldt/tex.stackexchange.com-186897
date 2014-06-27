@@ -1,39 +1,123 @@
 \documentclass[12pt,oneside,a4paper,final]{scrartcl}
 
+\usepackage{etoolbox,refcount}
+
+\parindent0cm
+\parskip1.0ex
+
 \newcounter{task}
 \setcounter{task}{0}
 
 \newcommand{\points}[1]{
-	(#1~Points)
+	\addtocounter{points}{#1}
+	\ifnum #1=1
+		(#1~Point)
+	\else
+		(#1~Points)
+	\fi
 }
 
-\newcommand{\task}[2]{
+\newenvironment{task}[1]{
 	\refstepcounter{task}
   	\begin{flushleft}
 		{\LARGE\bf Task \arabic{task}}
 	\end{flushleft}
 	{\Large \textbf{#1}}
-	\leavevmode\hfill ({#2}~Points)\\
+	\leavevmode\hfill (\nextpoints{}~Points)\\
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% https://tex.stackexchange.com/questions/74595/count-and-use-the-number-of-items-in-advance
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcounter{points}
+\newcounter{nextpoints}
+\newcommand{\setuppoints}{%
+  \stepcounter{nextpoints}%
+  \setcounter{points}{0}%
+%  \preto\item{}%
+}
+\makeatletter
+\newcommand{\computepoints}{%
+  \edef\@currentlabel{\number\c@points}%
+  \label{points@\number\numexpr\value{nextpoints}\relax}%
+}
+\newcommand{\nextpoints}{%
+  \getrefnumber{points@\number\c@nextpoints}%
+}
+\makeatother
+\AtBeginEnvironment{task}{\setuppoints}
+\AtEndEnvironment{task}{\computepoints}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
-	\task{Java}{3}
+	\begin{task}{Java}
 
-	Hello World \points{2}
+		Hello World \points{1}
 
-	for-each \points{1}
+		for-each \points{1}
+
+	\end{task}
+
+	\begin{task}{C++}
+
+		Bla bla \points{2}
+
+		Blub blub \points{2}
+
+	\end{task}
+
+
+	\begin{task}{Latex}
+
+		Foo foo \points{4}
+
+		bar bar \points{4}
+
+	\end{task}
+
+
+\end{document}
+
+
+
+
+
+
+There are \nextpoints{} ways how a parameter can be given:
+
+\begin{itemize}
+	\item By a constant expression.
+	\item By user interaction. \points{2}
+	\item From another database. \points{2}
+\end{itemize}
+
+There are \nextpoints{} ways how a parameter can be given:
+
+\begin{itemize}
+	\item By a constant expression. \points{2}
+	\item By user interaction.
+	\item From another database.
+\end{itemize}
+
+
+	\begin{task}{Java}
+		Hello World \points{2}
+
+		for-each \points{1}
+	\end{task}
+
+
+
 
 	\task{C++}{5}
 
-	Bla bla \points{2}
 
-	Blub blub \points{4}
 
 	\task{Latex}{4}
 
-	Foo foo \points{2}
 
-	bar bar \points{2}
 
-\end{document}
+
