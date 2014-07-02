@@ -1,123 +1,124 @@
 \documentclass[12pt,oneside,a4paper,final]{scrartcl}
-
-\usepackage{etoolbox,refcount}
-
-\parindent0cm
-\parskip1.0ex
+\usepackage{nameref}
+\usepackage{calculator}%
+\usepackage{calc}%
+\usepackage{totcount}%
+\usepackage{forloop}
+\usepackage{tikz}
 
 \newcounter{task}
 \setcounter{task}{0}
 
-\newcommand{\points}[1]{
-	\addtocounter{points}{#1}
-	\ifnum #1=1
-		(#1~Point)
-	\else
-		(#1~Points)
-	\fi
-}
 
-\newenvironment{task}[1]{
-	\refstepcounter{task}
-  	\begin{flushleft}
-		{\LARGE\bf Task \arabic{task}}
-	\end{flushleft}
-	{\Large \textbf{#1}}
-	\leavevmode\hfill (\nextpoints{}~Points)\\
-}
+\xdef\TotalCredits{0}%
+\xdef\TaskCredits{0}%
+\xdef\SubCredits{0}%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% https://tex.stackexchange.com/questions/74595/count-and-use-the-number-of-items-in-advance
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\printpoints}[1]{#1~\pgfmathequal{#1}{1}\ifnum\pgfmathresult=1 point\else points\fi}
 
-\newcounter{points}
-\newcounter{nextpoints}
-\newcommand{\setuppoints}{%
-  \stepcounter{nextpoints}%
-  \setcounter{points}{0}%
-%  \preto\item{}%
-}
+\newcommand{\points}[2]{
+\item #1 (\printpoints{#2})
+\ADD{\TaskCredits}{#2}{\SubCredits}%
+\xdef\TaskCredits{\SubCredits}%
+}%
+
+
 \makeatletter
-\newcommand{\computepoints}{%
-  \edef\@currentlabel{\number\c@points}%
-  \label{points@\number\numexpr\value{nextpoints}\relax}%
+\newcommand{\WriteCreditsToFile}[1]{%
+\immediate\write\@auxout{%
+\string\newlabel{credits::\number\value{task}}{{\thesection}{\thepage}{#1}{}}
+}% End of writing to AUX file
+}%
+\makeatother
+%
+
+\makeatletter
+\AtEndDocument{%
+\immediate\write\@auxout{%
+\string\newlabel{totalcredits}{{\thesection}{\thepage}{\TotalCredits}{}}
 }
-\newcommand{\nextpoints}{%
-  \getrefnumber{points@\number\c@nextpoints}%
 }
 \makeatother
-\AtBeginEnvironment{task}{\setuppoints}
-\AtEndEnvironment{task}{\computepoints}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{Task}[1]{%
+\xdef\TaskCredits{0}%
+\xdef\SubCredits{0}%
+\xdef\CreditsSoFar{0}%
+    \refstepcounter{task}
+    \begin{flushleft}
+        {\LARGE\bfseries Task \arabic{task}}
+    \end{flushleft}
+    {\Large \textbf{#1}}
+    \leavevmode\hfill (\nameref*{credits::\number\value{task}}~Points)\\
+    \begin{itemize} % Just for 'better' typography
+}{% Close it
+\end{itemize}
+\WriteCreditsToFile{\TaskCredits}%
+% Count all credits for the summary%
+\ADD{\TotalCredits}{\TaskCredits}{\CreditsSoFar}%
+\xdef\TotalCredits{\CreditsSoFar}%
+}%
+
+
+\regtotcounter{task}%
+
+\makeatletter%
+
+\newcounter{loop@@counter}%
+
+\newcounter{totaltask@@counter}%
+\newcounter{last@@counter}%
+
+\newcommand{\listoftasks}{%
+    \begin{center}
+    \setcounter{totaltask@@counter}{\number\totvalue{task}+1}%
+    \setcounter{last@@counter}{\number\totvalue{task}}%
+    \begin{tabular}{|c||r|c|c|}
+    \hline
+    Task number & Total credits & Achieved credits\\
+    \hline
+    \hline
+    \forloop{loop@@counter}{1}{\number\value{loop@@counter} < \number\value{totaltask@@counter}}{
+        \number\value{loop@@counter} & \nameref*{credits::\number\value{loop@@counter}} Points &
+        \ifnum\number\value{loop@@counter}<\number\value{last@@counter}
+            \tabularnewline\hline
+        \fi
+    }
+    \tabularnewline
+    \hline
+    \hline\hline
+    Total: & \nameref*{totalcredits} Points & \tabularnewline%
+    \hline
+    \end{tabular}
+    \end{center}
+}%
+
+\makeatother
+
 
 \begin{document}
 
-	\begin{task}{Java}
+\listoftasks
+\newpage
 
-		Hello World \points{1}
+    \begin{Task}{Java}
+      \points{Hello World}{1}
+  \end{Task}%
 
-		for-each \points{1}
+    \begin{Task}{C++}
+      \points{for-each}{0.5}
+     \points{blub blub}{0.5}
+    \end{Task}
 
-	\end{task}
+    \begin{Task}{Latex}
+     \points{Foo}{2}
+     \points{bar}{2}
+    \end{Task}
 
-	\begin{task}{C++}
-
-		Bla bla \points{2}
-
-		Blub blub \points{2}
-
-	\end{task}
-
-
-	\begin{task}{Latex}
-
-		Foo foo \points{4}
-
-		bar bar \points{4}
-
-	\end{task}
-
+\begin{Task}{Fortran54} % ;-)
+  \points{Write a Fortran 54 code to  \LaTeX ;-)}{100}
+  \points{Write a Babbage machine  code to replace \LaTeX ;-)}{1000}
+\end{Task}
 
 \end{document}
-
-
-
-
-
-
-There are \nextpoints{} ways how a parameter can be given:
-
-\begin{itemize}
-	\item By a constant expression.
-	\item By user interaction. \points{2}
-	\item From another database. \points{2}
-\end{itemize}
-
-There are \nextpoints{} ways how a parameter can be given:
-
-\begin{itemize}
-	\item By a constant expression. \points{2}
-	\item By user interaction.
-	\item From another database.
-\end{itemize}
-
-
-	\begin{task}{Java}
-		Hello World \points{2}
-
-		for-each \points{1}
-	\end{task}
-
-
-
-
-	\task{C++}{5}
-
-
-
-	\task{Latex}{4}
-
-
-
-
